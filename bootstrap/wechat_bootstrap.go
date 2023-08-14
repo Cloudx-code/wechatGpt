@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"fmt"
+	"time"
 
 	"wechatGpt/common/logs"
 	"wechatGpt/handler"
@@ -48,7 +49,14 @@ func Run() {
 	// 获取所有的群组
 	groups, err := self.Groups()
 	fmt.Println(groups, err)
-
+	go sendMsg2Active(friends)
 	// 阻塞主goroutine, 直到发生异常或者用户主动退出
 	bot.Block()
+}
+
+func sendMsg2Active(friends openwechat.Friends) {
+	ticker := time.NewTicker(5 * time.Minute)
+	for range ticker.C {
+		friends.SearchByNickName(1, "三行四列的行列式").SendText("激活测试")
+	}
 }
