@@ -6,23 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"wechatGpt/common/utils"
 )
 
-type WebTabService struct {
-	authorization  string
-	conversationId string
-}
+func GetGpt(text, conversationId string) (string, string) {
+	url := "https://wetabchatpro.haohuola.com/api/chat/conversation-v2"
 
-func NewWebTabService() *WebTabService {
-	return &WebTabService{
-		authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InVpZCI6IjY0YTM4OGZlMmE3NWZjNzBkMTU2NTg4MSIsInZlcnNpb24iOjAsImJyYW5jaCI6InpoIiwiY2hhdFZpcEVuZFRpbWUiOjE2OTM2Mzg1MDkzNjh9LCJpYXQiOjE2OTMxNTUzNDksImV4cCI6MTY5MzMyODE0OX0.jSMFW6YjfnHJvpA1F1Pxr5TSai4dTV7wOoeaXWfgGwQ`,
-	}
-}
-func (w *WebTabService) PreQuery() {
-
-}
-
-func (w *WebTabService) Query(text string) (string, error) {
 	payload := struct {
 		Prompt         string `json:"prompt"`
 		AssistantID    string `json:"assistantId"`
@@ -31,17 +21,17 @@ func (w *WebTabService) Query(text string) (string, error) {
 		Prompt:      text,
 		AssistantID: "",
 	}
-	if len(w.conversationId) > 0 {
-		payload.ConversationId = w.conversationId
+	if len(conversationId) > 0 {
+		payload.ConversationId = conversationId
 	}
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		fmt.Println("Error marshalling payload:", err)
-		return "", nil
+		return "", ""
 	}
 
-	req, _ := http.NewRequest("POST", baseUrl, bytes.NewBuffer(payloadBytes))
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9")
@@ -84,24 +74,41 @@ func (w *WebTabService) Query(text string) (string, error) {
 		if err == nil {
 			fmt.Println("Content:", data["data"].(map[string]interface{})["content"])
 			if _, ok := data["data"].(map[string]interface{}); !ok {
-				return content, nil
+				return content, conversationId
 			}
 			if id, ok := data["data"].(map[string]interface{})["conversationId"].(string); ok {
 				fmt.Println("测试下conversationId:", id)
-				w.conversationId = id
+				conversationId = id
 			}
 			if _, ok := data["data"].(map[string]interface{})["content"].(string); !ok {
-				return content, nil
+				return content, conversationId
 			}
 			content += data["data"].(map[string]interface{})["content"].(string)
 		} else {
 			fmt.Println("Error:", err)
 		}
 	}
-	return content, nil
+	return content, conversationId
 }
 
-func (w *WebTabService) PostQuery() {
-	//TODO implement me
-	panic("implement me")
+// 将字符串按照指定的分隔符拆分为数组
+func SplitString(s string, sep string) []string {
+	var result []string
+	length := len(s)
+	start := 0
+	for i := 0; i < length; i++ {
+		if i+len(sep) <= length && s[i:i+len(sep)] == sep {
+			if start != i {
+				result = append(result, s[start:i])
+			}
+			start = i + len(sep)
+			i += len(sep) - 1
+		}
+	}
+	if start != length {
+		result = append(result, s[start:length])
+	}
+	fmt.Println("result:")
+	fmt.Println(utils.Encode(result))
+	return result
 }

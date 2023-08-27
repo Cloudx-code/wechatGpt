@@ -18,6 +18,7 @@ func GroupMessageContextHandler() func(ctx *openwechat.MessageContext) {
 			if strings.Contains(msg.Content, "清空内容") {
 				utils.Reply(msg, "已清空历史聊天记录")
 				cache1.Delete("group" + sender.ID())
+				return
 			}
 
 			// 获取conversationId
@@ -31,6 +32,14 @@ func GroupMessageContextHandler() func(ctx *openwechat.MessageContext) {
 				utils.Reply(msg, reply)
 			}
 			cache1.Set("group"+sender.ID(), conversationId, time.Minute*5)
+			//s := wenxin.NewWenXinYiYanService()
+			//reply, err := s.Query(strings.Replace(msg.Content, "@孙尚香菜", "", -1))
+			//if err != nil {
+			//	return
+			//}
+			//if reply != "" {
+			//	utils.Reply(msg, reply)
+			//}
 		}
 	}
 }

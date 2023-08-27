@@ -17,7 +17,9 @@ func UserMessageContextHandler() func(ctx *openwechat.MessageContext) {
 	return func(ctx *openwechat.MessageContext) {
 		msg := ctx.Message
 		sender, _ := msg.Sender()
+		if msg.Content == "帮助" {
 
+		}
 		if msg.Content == "清空内容" {
 			utils.Reply(msg, "已清空历史聊天记录")
 			cache1.Delete(sender.ID())

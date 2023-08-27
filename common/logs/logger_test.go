@@ -6,6 +6,6 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	Infos("hi")
+	Info("hi")
 	fmt.Println(Logger.Flags())
 }
