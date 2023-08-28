@@ -6,13 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
 
+	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 )
+
+var accessToken string
 
 type WenXinYiYanService struct {
 	accessToken string
@@ -22,42 +24,46 @@ type WenXinYiYanService struct {
 
 func NewWenXinYiYanService() *WenXinYiYanService {
 	w := &WenXinYiYanService{}
-	w.accessToken, _ = w.getAccessToken()
 	// todo xiongyun 注意保密
 
+	if accessToken == "" {
+		accessToken, _ = w.getAccessToken()
+	}
+	w.accessToken = accessToken
 	return w
 }
 
 // url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=%s&client_secret=%s`
 func (w *WenXinYiYanService) getAccessToken() (string, error) {
 	params := url.Values{}
-	params.Add("grant_type", "client_credentials")
-	params.Add("client_id", w.apiKey)
-	params.Add("client_secret", w.secretKey)
+	params.Set("grant_type", "client_credentials")
+	params.Set("client_id", w.apiKey)
+	params.Set("client_secret", w.secretKey)
 	reqURL := fmt.Sprintf("%s?%s", accessTokenBaseURL, params.Encode())
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
+	logs.Info("Testurl:", reqURL)
 	resp, err := client.Get(reqURL)
 	if err != nil {
-		log.Fatalf("请求失败: %v", err)
+		logs.Error("请求失败: %v", err)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("读取响应失败: %v", err)
+		logs.Error("读取响应失败: %v", err)
 		return "", err
 	}
 	accessTokenResp := &AccessTokenResp{}
 	err = json.Unmarshal(bodyBytes, &accessTokenResp)
 	if err != nil {
-		log.Fatalf("fail to json.Unmarshal,[(w *WenXinYiYanService) getAccessToken],err: %v", err)
+		logs.Error("fail to json.Unmarshal,[(w *WenXinYiYanService) getAccessToken],err: %v", err)
 		return "", err
 	}
 	if accessTokenResp.Error != nil {
-		log.Fatalf("fail to getAccessToken,accessTokenResp:%v", utils.Encode(accessTokenResp))
+		logs.Error("fail to getAccessToken,accessTokenResp:%v", utils.Encode(accessTokenResp))
 		return "", errors.New(*accessTokenResp.ErrorDescription)
 	}
 	return accessTokenResp.AccessToken, nil
@@ -109,7 +115,8 @@ func (w *WenXinYiYanService) Query(content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println(string(body))
+	// todo xiongyun 可删
+	logs.Info(string(body))
 	wenXinResp := &wenXinYiYanResp{}
 	err = json.Unmarshal(body, &wenXinResp)
 	if err != nil {

@@ -1,47 +1,48 @@
-package weTab
+package webTab
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	"wechatGpt/common/logs"
+	"wechatGpt/dao/local_cache"
 )
 
 type WebTabService struct {
 	authorization  string
+	senderId       string
 	conversationId string
 }
 
-func NewWebTabService() *WebTabService {
+func NewWebTabService(senderId string) *WebTabService {
 	return &WebTabService{
 		authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InVpZCI6IjY0YTM4OGZlMmE3NWZjNzBkMTU2NTg4MSIsInZlcnNpb24iOjAsImJyYW5jaCI6InpoIiwiY2hhdFZpcEVuZFRpbWUiOjE2OTM2Mzg1MDkzNjh9LCJpYXQiOjE2OTMxNTUzNDksImV4cCI6MTY5MzMyODE0OX0.jSMFW6YjfnHJvpA1F1Pxr5TSai4dTV7wOoeaXWfgGwQ`,
+		senderId:      senderId,
 	}
 }
 func (w *WebTabService) PreQuery() {
-
+	w.conversationId = local_cache.GetWebTabContext(w.senderId)
 }
 
 func (w *WebTabService) Query(text string) (string, error) {
-	payload := struct {
-		Prompt         string `json:"prompt"`
-		AssistantID    string `json:"assistantId"`
-		ConversationId string `json:"conversationId"`
-	}{
+	reqBody := &WebTabReqBody{
 		Prompt:      text,
 		AssistantID: "",
 	}
 	if len(w.conversationId) > 0 {
-		payload.ConversationId = w.conversationId
+		reqBody.ConversationId = w.conversationId
 	}
 
-	payloadBytes, err := json.Marshal(payload)
+	reqBodyBytes, err := json.Marshal(reqBody)
 	if err != nil {
-		fmt.Println("Error marshalling payload:", err)
-		return "", nil
+		logs.Error("Error marshalling reqBody:", err)
+		return "", err
 	}
 
-	req, _ := http.NewRequest("POST", baseUrl, bytes.NewBuffer(payloadBytes))
+	req, _ := http.NewRequest("POST", baseUrl, bytes.NewBuffer(reqBodyBytes))
 
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Accept-Language", "zh-CN,zh;q=0.9")
@@ -52,6 +53,7 @@ func (w *WebTabService) Query(text string) (string, error) {
 	req.Header.Add("Sec-Fetch-Dest", "empty")
 	req.Header.Add("Sec-Fetch-Mode", "cors")
 	req.Header.Add("Sec-Fetch-Site", "none")
+	// todo xiongyun windows需要改下？
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 	req.Header.Add("i-app", "hitab")
 	req.Header.Add("i-branch", "zh")
@@ -62,16 +64,28 @@ func (w *WebTabService) Query(text string) (string, error) {
 	req.Header.Add("sec-ch-ua-mobile", "?0")
 	req.Header.Add("sec-ch-ua-platform", `"macOS"`)
 
-	res, _ := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		logs.Error("fail to client.Do,[WebTabService],err:%v", err)
+		return "", err
+	}
 
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
 
-	fmt.Println("end GetGpt")
-	fmt.Println("GetGpt body:", string(body))
+	// todo xiongyun 待删？
+	logs.Info("GetGpt body:", string(body))
 
+	return w.parseResp(string(body))
+}
+
+// 获取gpt返回内容及conversationId
+func (w *WebTabService) parseResp(respContent string) (string, error) {
 	var content string
-	jsonStrArray := SplitString(string(body), "_e79218965e_")
+	jsonStrArray := w.splitString(string(respContent), "_e79218965e_")
 	// 解析每个JSON片段并提取所需的数据
 	defer func() {
 		if err := recover(); err != nil {
@@ -82,12 +96,12 @@ func (w *WebTabService) Query(text string) (string, error) {
 		var data map[string]interface{}
 		err := json.Unmarshal([]byte(jsonStr), &data)
 		if err == nil {
-			fmt.Println("Content:", data["data"].(map[string]interface{})["content"])
+			logs.Info("Content:", data["data"].(map[string]interface{})["content"])
 			if _, ok := data["data"].(map[string]interface{}); !ok {
 				return content, nil
 			}
 			if id, ok := data["data"].(map[string]interface{})["conversationId"].(string); ok {
-				fmt.Println("测试下conversationId:", id)
+				logs.Info("测试下conversationId:", id)
 				w.conversationId = id
 			}
 			if _, ok := data["data"].(map[string]interface{})["content"].(string); !ok {
@@ -95,13 +109,31 @@ func (w *WebTabService) Query(text string) (string, error) {
 			}
 			content += data["data"].(map[string]interface{})["content"].(string)
 		} else {
-			fmt.Println("Error:", err)
+			logs.Error("Error:", err)
 		}
 	}
 	return content, nil
 }
 
+func (w *WebTabService) splitString(s string, sep string) []string {
+	var result []string
+	length := len(s)
+	start := 0
+	for i := 0; i < length; i++ {
+		if i+len(sep) <= length && s[i:i+len(sep)] == sep {
+			if start != i {
+				result = append(result, s[start:i])
+			}
+			start = i + len(sep)
+			i += len(sep) - 1
+		}
+	}
+	if start != length {
+		result = append(result, s[start:length])
+	}
+	return result
+}
+
 func (w *WebTabService) PostQuery() {
-	//TODO implement me
-	panic("implement me")
+	local_cache.SetWebTabContext(w.senderId, w.conversationId)
 }

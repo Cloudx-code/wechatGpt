@@ -3,9 +3,11 @@ package main
 import (
 	"wechatGpt/bootstrap"
 	"wechatGpt/common/logs"
+	"wechatGpt/dao/local_cache"
 )
 
 func main() {
-	logs.Init()
+	logs.Init(true)
+	local_cache.InitCache()
 	bootstrap.Run()
 }

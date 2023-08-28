@@ -1,4 +1,4 @@
-package weTab
+package webTab
 
 import (
 	"bytes"
