@@ -9,6 +9,7 @@ import (
 	"wechatGpt/common/utils"
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service/chat_manage"
+	"wechatGpt/service/image"
 
 	"github.com/eatmoreapple/openwechat"
 )
@@ -45,29 +46,46 @@ func NewGroupMsgHandler(ctx *openwechat.MessageContext) (*GroupMsgHandler, error
 	}, nil
 }
 
-func (g *GroupMsgHandler) handleMsg() {
+func (g *GroupMsgHandler) HandleMsg() {
 	if !g.msg.IsAt() {
 		return
 	}
-	// 清楚艾特内容
+	// 清除艾特的内容
 	g.msg.Content = strings.Replace(g.msg.Content, "@"+g.self.NickName, "", -1)
-	// todo 待删
-	logs.Info("验证下文本", g.msg.Content)
+	g.msg.Content = strings.TrimSpace(g.msg.Content)
 	// 选择模式（聊天？切换模式？）
 	chatStatus := local_cache.GetChatStatus(g.group.AvatarID())
+	// todo 待删
+	logs.Info("验证下文本", g.msg.Content, "status:", chatStatus)
+	// 校验特定用语
+	reply := CheckSpecialText(g.group.AvatarID(), g.msg.Content, chatStatus)
+	if len(reply) > 0 {
+		utils.Reply(g.msg, reply)
+		return
+	}
 	switch chatStatus {
 	case consts.NormalChat:
-		reply, err := chat_manage.NewNormalChatService(g.group.AvatarID()).Chat(g.msg.Content)
+		chatService := chat_manage.NewNormalChatService(g.group.AvatarID(), g.msg.Content)
+		reply, err := chatService.Chat()
 		if err != nil {
-			utils.Reply(g.msg, err.Error())
+			utils.Reply(g.msg, "聊天模式出错，错误为："+err.Error())
+			return
 		}
 		utils.Reply(g.msg, reply)
 	case consts.ModelChoose:
 		err := chat_manage.NewModelChooseService(g.group.AvatarID()).ChangeModel(g.msg.Content)
 		if err != nil {
-			utils.Reply(g.msg, err.Error())
+			utils.Reply(g.msg, "模式切换出错，错误为："+err.Error())
+			return
 		}
 		utils.Reply(g.msg, fmt.Sprintf("模型切换成功，当前模型为：%v", g.msg.Content))
+	case consts.CreateImage:
+		urlInfo, err := image.CreateImage(g.msg.Content)
+		if err != nil {
+			utils.Reply(g.msg, "模式切换出错，错误为："+err.Error())
+			return
+		}
+		utils.Reply(g.msg, "图片url为："+urlInfo)
 	}
 
 }

@@ -4,7 +4,8 @@ import (
 	"wechatGpt/common/consts"
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service/llm"
-	"wechatGpt/service/llm/webTab"
+	"wechatGpt/service/llm/openai"
+	"wechatGpt/service/llm/weTab"
 	"wechatGpt/service/llm/wenxin"
 )
 
@@ -15,8 +16,10 @@ func GetLLMService(sendId string) llm.LLM {
 	switch modelName {
 	case consts.ModelNameWenXinYiYan:
 		return wenxin.NewWenXinYiYanService()
-	case consts.ModelNameWebTab:
-		return webTab.NewWebTabService(sendId)
+	case consts.ModelNameWeTab:
+		return weTab.NewWeTabService(sendId)
+	case consts.ModelNameGPT:
+		return openai.NewGPTService()
 	default:
 		// 默认文心一言
 		return wenxin.NewWenXinYiYanService()

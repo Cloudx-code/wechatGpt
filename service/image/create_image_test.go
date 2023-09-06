@@ -1,4 +1,4 @@
-package webTab
+package image
 
 import (
 	"fmt"
@@ -6,5 +6,5 @@ import (
 )
 
 func TestName(t *testing.T) {
-	fmt.Println(GetGpt("nih", ""))
+	fmt.Println(CreateImage("画一只猪"))
 }

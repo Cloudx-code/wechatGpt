@@ -36,10 +36,6 @@ func Init(needLocalStore bool) error {
 func Info(format string, v ...any) {
 	Logger.SetPrefix("[INFO]")
 	Logger.Println(format, v)
-	//LocalLogger.SetPrefix("[INFO]")
-	//LocalLogger.Printf(format, v)
-	//LocalLogger.Println("堆栈信息：")
-	//LocalLogger.Println(string(debug.Stack()))
 }
 
 // Error 错误

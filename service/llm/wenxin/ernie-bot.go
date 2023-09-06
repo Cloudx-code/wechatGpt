@@ -14,8 +14,6 @@ import (
 	"wechatGpt/common/utils"
 )
 
-var accessToken string
-
 type WenXinYiYanService struct {
 	accessToken string
 	apiKey      string
@@ -92,7 +90,7 @@ func (w *WenXinYiYanService) Query(content string) (string, error) {
 	params := url.Values{}
 	params.Add("access_token", w.accessToken)
 	reqURL := fmt.Sprintf("%s?%s", wenxinBaseUrl, params.Encode())
-
+	logs.Info("test request:", string(requestData))
 	req, err := http.NewRequest("POST", reqURL, bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err

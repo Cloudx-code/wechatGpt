@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	logs.Init(true)
+	logs.Init(false)
 	local_cache.InitCache()
 	bootstrap.Run()
 }

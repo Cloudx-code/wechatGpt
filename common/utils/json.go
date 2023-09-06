@@ -11,3 +11,7 @@ func Encode(srcObj interface{}) string {
 		return string(resBytes)
 	}
 }
+
+func Decode(jsonStr string, destObj interface{}) error {
+	return json.Unmarshal([]byte(jsonStr), &destObj)
+}

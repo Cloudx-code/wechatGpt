@@ -3,6 +3,8 @@ package handler
 import (
 	"time"
 
+	"wechatGpt/common/logs"
+
 	"github.com/eatmoreapple/openwechat"
 	"github.com/patrickmn/go-cache"
 )
@@ -29,9 +31,10 @@ func HandleGroupMessage() func(ctx *openwechat.MessageContext) {
 	return func(ctx *openwechat.MessageContext) {
 		msgHandler, err := NewGroupMsgHandler(ctx)
 		if err != nil {
+			logs.Error("fail to NewGroupMsgHandler(ctx),err:%v", err)
 			// todo 给特定人员发消息，比如我
 			return
 		}
-		msgHandler.handleMsg()
+		msgHandler.HandleMsg()
 	}
 }

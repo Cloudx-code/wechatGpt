@@ -1,8 +1,6 @@
 package chat_manage
 
 import (
-	"wechatGpt/common/consts"
-	"wechatGpt/dao/local_cache"
 	factory "wechatGpt/service/llm/llm_factory"
 )
 
@@ -14,21 +12,17 @@ import (
 
 type NormalChatService struct {
 	senderId string
+	content  string
 }
 
-func NewNormalChatService(senderId string) *NormalChatService {
-	return &NormalChatService{senderId: senderId}
+func NewNormalChatService(senderId string, content string) *NormalChatService {
+	return &NormalChatService{senderId: senderId, content: content}
 }
 
-func (n *NormalChatService) Chat(content string) (string, error) {
-	if content == "模型选择" {
-		local_cache.SetChatStatus(n.senderId, consts.ModelChoose)
-		return consts.ModelIntroduce, nil
-	}
-
+func (n *NormalChatService) Chat() (string, error) {
 	llmModel := factory.GetLLMService(n.senderId)
 	llmModel.PreQuery()
-	llmReply, err := llmModel.Query(content)
+	llmReply, err := llmModel.Query(n.content)
 	if err != nil {
 		return "", err
 	}

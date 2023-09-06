@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"time"
-
+	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
-	"wechatGpt/service/llm/webTab"
+	"wechatGpt/service/chat_manage"
 
 	"github.com/eatmoreapple/openwechat"
 )
@@ -16,28 +15,18 @@ type UserChat struct {
 func HandleUserMessage() func(ctx *openwechat.MessageContext) {
 	return func(ctx *openwechat.MessageContext) {
 		msg := ctx.Message
-		sender, _ := msg.Sender()
-		if msg.Content == "帮助" {
-
-		}
-		if msg.Content == "清空内容" {
-			utils.Reply(msg, "已清空历史聊天记录")
-			cache1.Delete(sender.AvatarID())
+		sender, err := msg.Sender()
+		if err != nil {
+			logs.Error("fail to sender,err:", err)
+			utils.Reply(msg, "获取信息出错，请咨询相关人员")
 			return
 		}
-		// conversationId
-		// 获取conversationId
-		var conversationId string
-
-		id, ok := cache1.Get(sender.AvatarID())
-		if ok {
-			conversationId = id.(string)
+		chatService := chat_manage.NewNormalChatService(sender.AvatarID(), msg.Content)
+		reply, err := chatService.Chat()
+		if err != nil {
+			utils.Reply(msg, "聊天模式出错，错误为："+err.Error())
+			return
 		}
-		reply, conversationId := webTab.GetGpt(msg.Content, conversationId)
-		if reply != "" {
-			utils.Reply(msg, reply)
-		}
-		// 缓存conversationId
-		cache1.Set(sender.AvatarID(), conversationId, time.Minute*5)
+		utils.Reply(msg, reply)
 	}
 }

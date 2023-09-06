@@ -1,4 +1,4 @@
-package model
+package openai
 
 // ChatGPTResponseBody 响应
 type ChatGPTResponseBody struct {

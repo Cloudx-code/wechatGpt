@@ -17,19 +17,17 @@ type ModelChooseService struct {
 	senderId string
 }
 
+// NewModelChooseService 群聊以群为整体，而不是以个人为整体
 func NewModelChooseService(senderId string) *ModelChooseService {
 	return &ModelChooseService{senderId: senderId}
 }
 
 func (m *ModelChooseService) ChangeModel(modelNameStr string) error {
 	modelName := consts.ModelName(modelNameStr)
-	switch modelName {
-	case consts.ModelNameWenXinYiYan:
-		local_cache.SetCurrentModel(m.senderId, consts.ModelNameWenXinYiYan)
-	case consts.ModelNameWebTab:
-		local_cache.SetCurrentModel(m.senderId, consts.ModelNameWebTab)
-	default:
-		return errors.New("模型不存在，请重新输入")
+	if _, ok := consts.ModelInfoMap[modelName]; ok {
+		local_cache.SetCurrentModel(m.senderId, modelName)
+		local_cache.SetChatStatus(m.senderId, consts.NormalChat)
+		return nil
 	}
-	return nil
+	return errors.New("模型不存在，请重新输入")
 }
