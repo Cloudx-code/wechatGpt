@@ -14,8 +14,14 @@ const (
 )
 
 var ModelInfoMap = map[ModelName]*model.ModelDetail{
-	ModelNameWenXinYiYan: nil,
-	ModelNameWeTab:       nil,
-	ModelNameGPT:         nil,
+	ModelNameWenXinYiYan: {
+		ModelIntroduce: "",
+	},
+	ModelNameWeTab: {
+		ModelIntroduce: "",
+	},
+	ModelNameGPT: {
+		ModelIntroduce: "",
+	},
 	//ModelNameImageTest:   nil,
 }

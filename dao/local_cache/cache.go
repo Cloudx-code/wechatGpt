@@ -47,21 +47,3 @@ func SetCurrentModel(senderId string, currentModel consts.ModelName) {
 	key := consts.RedisKeyCurrentModel + senderId
 	cacheProxy.Set(key, currentModel, 0)
 }
-
-// GetWebTabContext  获取WebTab上下文
-func GetWebTabContext(senderId string) string {
-	key := consts.RedisKeyWebTabContext + senderId
-	v, ok := cacheProxy.Get(key)
-	if !ok {
-		return ""
-	}
-	if conversationId, ok := v.(string); ok {
-		return conversationId
-	}
-	return ""
-}
-
-func SetWebTabContext(senderId string, conversationId string) {
-	key := consts.RedisKeyWebTabContext + senderId
-	cacheProxy.Set(key, conversationId, 0)
-}

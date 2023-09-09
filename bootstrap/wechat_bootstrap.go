@@ -58,9 +58,9 @@ func sendMsg2Active(friends openwechat.Friends) {
 	ticker := time.NewTicker(10 * time.Minute)
 	for range ticker.C {
 		//friends.First().SendText("hello")
-		err := friends.SearchByNickName(1, "三行四列的行列式").SendText("激活测试")
+		err := friends.SearchByNickName(1, "指尖轻挑").SendText("我是俞越啊，哈哈哈哈哈")
 		if err != nil {
-			logs.Error("fail to send friend,err:", err)
+			logs.Error("fail to send friend,err:%v", err)
 		} else {
 			logs.Info("success to send friend")
 		}

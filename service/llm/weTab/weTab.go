@@ -10,13 +10,14 @@ import (
 	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
+	"wechatGpt/config"
 	"wechatGpt/dao/local_cache"
 )
 
 type WebTabService struct {
-	authorization  string
-	senderId       string
-	conversationId string
+	authorization  string // 用户验证信息
+	senderId       string // 发送者Id
+	conversationId string // 对话Id
 }
 
 func NewWeTabService(senderId string) *WebTabService {
@@ -33,8 +34,8 @@ func NewWeTabService(senderId string) *WebTabService {
 func (w *WebTabService) getAuthorization() string {
 
 	loginInfo := &LoginInfo{
-		Email:    loginEmail,
-		Password: pwd,
+		Email:    config.GetLLMConfig().WeTabEmail,
+		Password: config.GetLLMConfig().WeTabPwd,
 	}
 	reqBuffer, _ := json.Marshal(loginInfo)
 
@@ -63,7 +64,7 @@ func (w *WebTabService) getAuthorization() string {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		logs.Error("fail to getAuthorization Do,err:", err)
+		logs.Error("fail to getAuthorization Do,err:%v", err)
 		return ""
 	}
 	defer resp.Body.Close()
@@ -73,15 +74,15 @@ func (w *WebTabService) getAuthorization() string {
 	loginResp := &LoginResp{}
 	err = json.Unmarshal(body, &loginResp)
 	if err != nil || loginResp.Code != 0 {
-		logs.Error("fail to getAuthorization Unmarshal,err:", err)
-		logs.Error("fail to getAuthorization Unmarshal,info:", utils.Encode(loginResp))
+		logs.Error("fail to getAuthorization Unmarshal,err:%v", err)
+		logs.Error("fail to getAuthorization Unmarshal,info:%v", utils.Encode(loginResp))
 		return ""
 	}
 	return loginResp.Data.Token
 }
 
 func (w *WebTabService) PreQuery() {
-	w.conversationId = local_cache.GetWebTabContext(w.senderId)
+	w.conversationId = w.getWebTabContext()
 }
 
 func (w *WebTabService) Query(text string) (string, error) {
@@ -95,7 +96,7 @@ func (w *WebTabService) Query(text string) (string, error) {
 
 	reqBodyBytes, err := json.Marshal(reqBody)
 	if err != nil {
-		logs.Error("Error marshalling reqBody:", err)
+		logs.Error("Error marshalling reqBody:%v", err)
 		return "", err
 	}
 
@@ -175,7 +176,7 @@ func (w *WebTabService) parseResp(respContent string) (string, error) {
 			}
 			content += data["data"].(map[string]interface{})["content"].(string)
 		} else {
-			logs.Error("Error:", err)
+			logs.Error("Error:%v", err)
 		}
 	}
 	return content, nil
@@ -201,7 +202,25 @@ func (w *WebTabService) splitString(s string, sep string) []string {
 }
 
 func (w *WebTabService) PostQuery() {
-	local_cache.SetWebTabContext(w.senderId, w.conversationId)
+	w.setWebTabContext()
 	// 如果继续聊天，继续weTab模式
 	local_cache.SetCurrentModel(w.senderId, consts.ModelNameWeTab)
+}
+
+// GetWebTabContext  获取WebTab上下文
+func (w *WebTabService) getWebTabContext() string {
+	key := consts.RedisKeyWebTabContext + w.senderId
+	v, ok := local_cache.Get(key)
+	if !ok {
+		return ""
+	}
+	if conversationId, ok := v.(string); ok {
+		return conversationId
+	}
+	return ""
+}
+
+func (w *WebTabService) setWebTabContext() {
+	key := consts.RedisKeyWebTabContext + w.senderId
+	local_cache.Set(key, w.conversationId)
 }

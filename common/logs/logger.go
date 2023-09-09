@@ -35,17 +35,16 @@ func Init(needLocalStore bool) error {
 // Info 详情
 func Info(format string, v ...any) {
 	Logger.SetPrefix("[INFO]")
-	Logger.Println(format, v)
+	Logger.Printf(format, v...)
 }
 
 // Error 错误
 func Error(format string, v ...any) {
 	Logger.SetPrefix("[ERROR]")
-	Logger.Println(format, v)
+	Logger.Printf(format, v...)
 	if LocalLogger != nil {
 		LocalLogger.SetPrefix("[ERROR]")
-		LocalLogger.Println(format, v)
-		LocalLogger.Println("堆栈信息：")
-		LocalLogger.Println(string(debug.Stack()))
+		LocalLogger.Printf(format, v...)
+		LocalLogger.Printf("堆栈信息：%v", string(debug.Stack()))
 	}
 }

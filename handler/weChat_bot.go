@@ -24,9 +24,19 @@ func RegisterHandler() (msgFunc func(msg *openwechat.Message), err error) {
 	}, HandleGroupMessage())
 
 	return dispatcher.AsMessageHandler(), nil
-
 }
 
+func HandleUserMessage() func(ctx *openwechat.MessageContext) {
+	return func(ctx *openwechat.MessageContext) {
+		msgHandler, err := NewUserMsgHandler(ctx)
+		if err != nil {
+			logs.Error("fail to NewGroupMsgHandler(ctx),err:%v", err)
+			// todo 给特定人员发消息，比如我
+			return
+		}
+		msgHandler.HandleMsg()
+	}
+}
 func HandleGroupMessage() func(ctx *openwechat.MessageContext) {
 	return func(ctx *openwechat.MessageContext) {
 		msgHandler, err := NewGroupMsgHandler(ctx)

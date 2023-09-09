@@ -37,7 +37,7 @@ func CreateImage(prompt string) (string, error) {
 	req, err := http.NewRequest("POST", "https://api.openai.com/v1/images/generations", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error creating request:", err)
-		return "fail to http.NewRequest，err:" + err.Error(), err
+		return "fail to config.NewRequest，err:" + err.Error(), err
 	}
 
 	// 添加 HTTP 头

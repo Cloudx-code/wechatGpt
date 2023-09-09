@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"wechatGpt/common/logs"
+	"wechatGpt/config"
 )
 
 // 做代理
@@ -62,7 +63,7 @@ func Completions(msg string) (string, error) {
 		return "", err
 	}
 
-	apiKey := "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"
+	apiKey := config.GetLLMConfig().GPT35Ak
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	client := &http.Client{Timeout: 90 * time.Second}

@@ -29,7 +29,7 @@ func NewGroupMsgHandler(ctx *openwechat.MessageContext) (*GroupMsgHandler, error
 	msg := ctx.Message
 	sender, err := msg.Sender()
 	if err != nil {
-		logs.Error("fail to msg.Sender(),[NewGroupMsgHandler]")
+		logs.Error("fail to msg.Sender(),[NewGroupMsgHandler],err:%v", err)
 		return nil, err
 	}
 

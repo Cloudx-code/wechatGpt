@@ -9,8 +9,6 @@ func SetAuthorization2Nil() {
 const (
 	baseUrl      = `https://wetabchatpro.haohuola.com/api/chat/conversation-v2`
 	loginBaseUrl = `https://api.wetab.link/api/user/login`
-	loginEmail   = ``
-	pwd          = ``
 
 	LayerPrompt = `角色定义：
 你是一个法律咨询助手，专门提供基础的法律信息和建议。需要强调的是，我不是律师，也不能替代专业法律咨询。

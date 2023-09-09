@@ -12,6 +12,7 @@ import (
 
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
+	"wechatGpt/config"
 )
 
 type WenXinYiYanService struct {
@@ -22,8 +23,8 @@ type WenXinYiYanService struct {
 
 func NewWenXinYiYanService() *WenXinYiYanService {
 	w := &WenXinYiYanService{}
-	// todo xiongyun 注意保密
-
+	w.apiKey = config.GetLLMConfig().WenXinAk    // 请替换为您自己的API Key
+	w.secretKey = config.GetLLMConfig().WenXinSk // 请替换为您自己的Secret Key
 	if accessToken == "" {
 		accessToken, _ = w.getAccessToken()
 	}
@@ -41,7 +42,7 @@ func (w *WenXinYiYanService) getAccessToken() (string, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
-	logs.Info("Testurl:", reqURL)
+	logs.Info("Testurl:%v", reqURL)
 	resp, err := client.Get(reqURL)
 	if err != nil {
 		logs.Error("请求失败: %v", err)
@@ -90,7 +91,7 @@ func (w *WenXinYiYanService) Query(content string) (string, error) {
 	params := url.Values{}
 	params.Add("access_token", w.accessToken)
 	reqURL := fmt.Sprintf("%s?%s", wenxinBaseUrl, params.Encode())
-	logs.Info("test request:", string(requestData))
+	logs.Info("test request:%v", string(requestData))
 	req, err := http.NewRequest("POST", reqURL, bytes.NewBuffer(requestData))
 	if err != nil {
 		return "", err
