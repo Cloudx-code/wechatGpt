@@ -63,7 +63,7 @@ func Completions(msg string) (string, error) {
 		return "", err
 	}
 
-	apiKey := config.GetLLMConfig().GPT35Ak
+	apiKey := config.GetLLMConfig().GPTAk
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	client := &http.Client{Timeout: 90 * time.Second}

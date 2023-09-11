@@ -1,7 +1,10 @@
 package config
 
-var conf BotConfig
+var (
+	StaticConf  BotStaticConfig
+	DynamicConf BotDynamicConfig
+)
 
 func GetLLMConfig() *LLMConf {
-	return &conf.LLMConf
+	return &StaticConf.LLMConf
 }

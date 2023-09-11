@@ -16,6 +16,12 @@ import (
 func main() {
 	logs.Init(true)
 	local_cache.InitCache()
-	config.Init("config/config.yaml")
+	config.InitStaticConfig("config/static_config.json")
+	//config.InitDynamicConfig("config.json")
+	//fmt.Println(utils.Encode(config.StaticConf))
+	//fmt.Println(utils.Encode(config.DynamicConf))
+	//for {
+	//
+	//}
 	bootstrap.Run()
 }

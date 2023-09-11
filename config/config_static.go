@@ -1,13 +1,13 @@
 package config
 
-type BotConfig struct {
-	LLMConf LLMConf `yaml:"LLMConf"`
+type BotStaticConfig struct {
+	LLMConf LLMConf `json:"LLMConf"`
 }
 
 type LLMConf struct {
-	WeTabEmail string `yaml:"weTabEmail"`
-	WeTabPwd   string `yaml:"weTabPwd"`
-	WenXinAk   string `yaml:"wenXinAk"`
-	WenXinSk   string `yaml:"wenXinSk"`
-	GPT35Ak    string `yaml:"GPT35Ak"`
+	WeTabEmail string `json:"WeTabEmail,omitempty"`
+	WeTabPwd   string `json:"WeTabPwd,omitempty"`
+	WenXinAk   string `json:"WenXinAk,omitempty"`
+	WenXinSk   string `json:"WenXinSk,omitempty"`
+	GPTAk      string `json:"GPTAk,omitempty"`
 }

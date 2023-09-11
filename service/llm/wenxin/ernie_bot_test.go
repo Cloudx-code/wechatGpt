@@ -11,7 +11,7 @@ import (
 
 func TestWenXin(t *testing.T) {
 	logs.Init(false)
-	config.Init("../../../config/config.yaml")
+	config.InitStaticConfig("../../../config/static_config.json")
 	s := NewWenXinYiYanService()
 	fmt.Println(utils.Encode(s))
 	//s.getAccessToken()
