@@ -2,10 +2,12 @@ package bootstrap
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"wechatGpt/common/logs"
 	"wechatGpt/handler"
+	"wechatGpt/service/self_bot"
 
 	"github.com/eatmoreapple/openwechat"
 )
@@ -41,30 +43,35 @@ func Run() {
 		fmt.Println(err)
 		return
 	}
-
-	// 获取所有的好友
-	friends, err := self.Friends()
-	fmt.Println(friends, err)
-
-	// 获取所有的群组
-	groups, err := self.Groups()
-	fmt.Println(groups, err)
-	go sendMsg2Active(friends)
+	// 初始化机器人本身的功能
+	self_bot.InitBotSelf(self)
+	logs.Info("初始化机器人成功！")
+	// 定时发消息
+	go sendMsg2Active()
 	// 阻塞主goroutine, 直到发生异常或者用户主动退出
 	bot.Block()
 }
 
-func sendMsg2Active(friends openwechat.Friends) {
-	ticker := time.NewTicker(10 * time.Minute)
+func sendMsg2Active() {
+	var reply string
+	var err error
+	botSelf := self_bot.NewBotOperateService()
+	msgList := []string{"我没有！！！", "我不齐！！！", "晓得哒！！！", "我睡滴！！！", "不管我！！！"}
+	ticker := time.NewTicker(30 * time.Minute)
 	for range ticker.C {
-		//friends.First().SendText("hello")
-		err := friends.SearchByNickName(1, "指尖轻挑").SendText("我没有！！！\n我不齐！！！\n晓得哒！！！\n我睡滴！！！\n不管我！！！")
-		err = friends.SearchByNickName(1, "sub(n,n,17)").SendText("测试")
+		rand.Seed(time.Now().UnixNano())
+		reply, err = botSelf.SendMsg2Friends("指尖轻挑", msgList[rand.Intn(len(msgList))])
 		if err != nil {
-			logs.Error("fail to send friend,err:%v", err)
-		} else {
-			logs.Info("success to send friend")
+			logs.Error("fail to send friend old run,err:%v", err)
+			botSelf.SendMsg2Friends("sub(n,n,17)", reply)
+			continue
 		}
-
+		reply, err = botSelf.SendMsg2Friends("sub(n,n,17)", msgList[rand.Intn(len(msgList))])
+		if err != nil {
+			logs.Error("fail to send friend xy,err:%v", err)
+			botSelf.SendMsg2Friends("指尖轻挑)", reply)
+			continue
+		}
+		logs.Info("success to send friend")
 	}
 }

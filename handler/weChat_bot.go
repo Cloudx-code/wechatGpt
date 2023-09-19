@@ -1,15 +1,10 @@
 package handler
 
 import (
-	"time"
-
 	"wechatGpt/common/logs"
 
 	"github.com/eatmoreapple/openwechat"
-	"github.com/patrickmn/go-cache"
 )
-
-var cache1 = cache.New(time.Minute*5, time.Minute*5)
 
 func RegisterHandler() (msgFunc func(msg *openwechat.Message), err error) {
 	dispatcher := openwechat.NewMessageMatchDispatcher()
@@ -37,6 +32,7 @@ func HandleUserMessage() func(ctx *openwechat.MessageContext) {
 		msgHandler.HandleMsg()
 	}
 }
+
 func HandleGroupMessage() func(ctx *openwechat.MessageContext) {
 	return func(ctx *openwechat.MessageContext) {
 		msgHandler, err := NewGroupMsgHandler(ctx)

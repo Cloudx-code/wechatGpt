@@ -28,5 +28,4 @@ func (n *NormalChatService) Chat() (string, error) {
 	}
 	llmModel.PostQuery()
 	return llmReply, nil
-
 }

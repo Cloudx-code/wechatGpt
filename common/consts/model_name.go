@@ -11,6 +11,7 @@ const (
 	ModelNameWeTab       ModelName = "gpt3.5插件版"
 	ModelNameGPT         ModelName = "gpt3.5"
 	//ModelNameImageTest   ModelName = "gpt画图"
+	ModelNameAdministrator = "管理员模式"
 )
 
 var ModelInfoMap = map[ModelName]*model.ModelDetail{
@@ -21,6 +22,9 @@ var ModelInfoMap = map[ModelName]*model.ModelDetail{
 		ModelIntroduce: "",
 	},
 	ModelNameGPT: {
+		ModelIntroduce: "",
+	},
+	ModelNameAdministrator: {
 		ModelIntroduce: "",
 	},
 	//ModelNameImageTest:   nil,

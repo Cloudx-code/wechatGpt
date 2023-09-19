@@ -24,10 +24,10 @@ func NewModelChooseService(senderId string) *ModelChooseService {
 
 func (m *ModelChooseService) ChangeModel(modelNameStr string) error {
 	modelName := consts.ModelName(modelNameStr)
-	if _, ok := consts.ModelInfoMap[modelName]; ok {
-		local_cache.SetCurrentModel(m.senderId, modelName)
-		local_cache.SetChatStatus(m.senderId, consts.NormalChat)
-		return nil
+	if _, ok := consts.ModelInfoMap[modelName]; !ok {
+		return errors.New("模型不存在，请重新输入")
 	}
-	return errors.New("模型不存在，请重新输入")
+	local_cache.SetCurrentModel(m.senderId, modelName)
+	local_cache.SetChatStatus(m.senderId, consts.NormalChat)
+	return nil
 }

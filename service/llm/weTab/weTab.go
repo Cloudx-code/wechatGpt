@@ -111,7 +111,6 @@ func (w *WebTabService) Query(text string) (string, error) {
 	req.Header.Add("Sec-Fetch-Dest", "empty")
 	req.Header.Add("Sec-Fetch-Mode", "cors")
 	req.Header.Add("Sec-Fetch-Site", "none")
-	// todo xiongyun windows需要改下？
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 	req.Header.Add("i-app", "hitab")
 	req.Header.Add("i-branch", "zh")
@@ -134,8 +133,7 @@ func (w *WebTabService) Query(text string) (string, error) {
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	// todo xiongyun 待删？
-	logs.Info("GetGpt body:", string(body))
+	logs.Info("weTab:%v", string(body))
 
 	return w.parseResp(string(body))
 }
@@ -163,12 +161,12 @@ func (w *WebTabService) parseResp(respContent string) (string, error) {
 		var data map[string]interface{}
 		err := json.Unmarshal([]byte(jsonStr), &data)
 		if err == nil {
-			logs.Info("Content:", data["data"].(map[string]interface{})["content"])
+			logs.Info("Content:%v", data["data"].(map[string]interface{})["content"])
 			if _, ok := data["data"].(map[string]interface{}); !ok {
 				return content, nil
 			}
 			if id, ok := data["data"].(map[string]interface{})["conversationId"].(string); ok {
-				logs.Info("测试下conversationId:", id)
+				logs.Info("测试下conversationId:%v", id)
 				w.conversationId = id
 			}
 			if _, ok := data["data"].(map[string]interface{})["content"].(string); !ok {

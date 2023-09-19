@@ -9,5 +9,5 @@ import (
 var cacheProxy *cache.Cache
 
 func InitCache() {
-	cacheProxy = cache.New(time.Minute*5, time.Minute*5)
+	cacheProxy = cache.New(time.Minute*10, time.Minute*5)
 }

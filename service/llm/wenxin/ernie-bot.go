@@ -114,7 +114,7 @@ func (w *WenXinYiYanService) Query(content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// todo xiongyun 可删
+
 	logs.Info(string(body))
 	wenXinResp := &wenXinYiYanResp{}
 	err = json.Unmarshal(body, &wenXinResp)

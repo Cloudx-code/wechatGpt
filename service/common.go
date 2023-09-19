@@ -1,4 +1,4 @@
-package handler
+package service
 
 import (
 	"strings"
@@ -8,7 +8,7 @@ import (
 	"wechatGpt/service/chat_manage"
 )
 
-func CheckSpecialText(senderId, content string, chatStatus consts.ChatStatus) string {
+func CheckSpecialText2(senderId, content string, chatStatus consts.ChatStatus) string {
 	if chatStatus == consts.ModelChoose {
 		return ""
 	}
