@@ -9,6 +9,7 @@ import (
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service"
 	"wechatGpt/service/administrator"
+	"wechatGpt/service/authority"
 
 	"github.com/eatmoreapple/openwechat"
 )
@@ -56,11 +57,15 @@ func (g *GroupMsgHandler) HandleMsg() {
 	if len(g.msg.Content) == 0 {
 		return
 	}
+	// 前置校验
+	if reply, err := authority.NewManageAuthorityService(g.group.AvatarID(), g.group.NickName).CheckAuthority(); err != nil && len(reply) == 0 {
+		utils.Reply(g.msg, reply)
+		return
+	}
 	var reply string
 	chatStatus := local_cache.GetChatStatus(g.group.AvatarID())
 	switch chatStatus {
 	case consts.Administrator:
-		// todo xiongyun，现在整个群都会变管理员！！！
 		reply = administrator.NewAdministratorService(g.group.AvatarID(), g.sender.NickName, g.msg.Content).HandlerMsg()
 	default:
 		reply = service.NewGroupChatService(g.group.AvatarID(), g.sender.AvatarID(), g.sender.NickName, g.msg.Content, chatStatus).HandleMsg()

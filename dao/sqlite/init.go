@@ -1,6 +1,10 @@
 package sqlite
 
 import (
+	"fmt"
+
+	"wechatGpt/model"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -11,9 +15,9 @@ func Init(fileName string) {
 	var err error
 	DBProxy, err = gorm.Open(sqlite.Open(fileName), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic(fmt.Sprintf("failed to connect database:%v", err))
 	}
 
 	// Migrate the schema
-	DBProxy.AutoMigrate(&User{})
+	DBProxy.AutoMigrate(&model.User{})
 }

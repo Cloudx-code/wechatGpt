@@ -16,20 +16,18 @@ import (
 /*
 	@Author: xy
 	@Date: 2023/9/15
-	@Desc: 群聊处理service，这一层完全与微信解耦合，聚焦于内容本身
+	@Desc: 私聊处理service，这一层完全与微信解耦合，聚焦于内容本身
 */
 
-type GroupChatService struct {
-	GroupId    string            // 群ID
+type UserChatService struct {
 	SenderId   string            // 发送人ID
 	SenderName string            // 发送人昵称
 	Content    string            // 聊天消息
 	ChatStatus consts.ChatStatus // 当前聊天状态（不同状态，机器人的操作不一样）
 }
 
-func NewGroupChatService(groupId, senderId, senderName, content string, chatStatus consts.ChatStatus) *GroupChatService {
-	return &GroupChatService{
-		GroupId:    groupId,
+func NewUserChatService(senderId, senderName, content string, chatStatus consts.ChatStatus) *UserChatService {
+	return &UserChatService{
 		Content:    content,
 		SenderId:   senderId,
 		SenderName: senderName,
@@ -37,31 +35,30 @@ func NewGroupChatService(groupId, senderId, senderName, content string, chatStat
 	}
 }
 
-func (g *GroupChatService) HandleMsg() string {
+func (u *UserChatService) HandleMsg() string {
 	// 选择模式（聊天？切换模式？）
-	logs.Info("用户文本：%v，status:%v", g.Content, g.ChatStatus)
+	logs.Info("用户文本：%v，status:%v", u.Content, u.ChatStatus)
 	// 校验特定用语
-	reply := g.CheckSpecialText()
+	reply := u.CheckSpecialText()
 	if len(reply) > 0 {
 		return reply
 	}
-	return "!!!"
-	switch g.ChatStatus {
+	switch u.ChatStatus {
 	case consts.NormalChat:
-		chatService := chat_manage.NewNormalChatService(g.GroupId, g.Content)
+		chatService := chat_manage.NewNormalChatService(u.SenderId, u.Content)
 		reply, err := chatService.Chat()
 		if err != nil {
 			return fmt.Sprintf("聊天模式出错，错误为：%v", err.Error())
 		}
 		return reply
 	case consts.ModelChoose:
-		err := g.ChangeModel()
+		err := u.ChangeModel()
 		if err != nil {
 			return fmt.Sprintf("模式切换出错，错误为：%v", err.Error())
 		}
-		return fmt.Sprintf("模型切换成功，当前模型为：%v", g.Content)
+		return fmt.Sprintf("模型切换成功，当前模型为：%v", u.Content)
 	case consts.CreateImage:
-		urlInfo, err := image.CreateImage(g.Content)
+		urlInfo, err := image.CreateImage(u.Content)
 		if err != nil {
 			return fmt.Sprintf("生成图片有误，错误为：%v", err.Error())
 		}
@@ -72,21 +69,21 @@ func (g *GroupChatService) HandleMsg() string {
 }
 
 // CheckSpecialText 校验特定话术
-func (g *GroupChatService) CheckSpecialText() string {
-	if g.ChatStatus == consts.ModelChoose {
+func (u *UserChatService) CheckSpecialText() string {
+	if u.ChatStatus == consts.ModelChoose {
 		return ""
 	}
-	if aimStr, ok := utils.ContainStrArray(g.Content, []string{"模型选择", "模型切换"}); ok {
-		g.Content = utils.ClearContent(g.Content, aimStr)
-		err := g.ChangeModel()
+	if aimStr, ok := utils.ContainStrArray(u.Content, []string{"模型选择", "模型切换"}); ok {
+		u.Content = utils.ClearContent(u.Content, aimStr)
+		err := u.ChangeModel()
 		if err != nil {
 			return ""
 		}
-		return "模型切换成功，当前模型为：" + g.Content
+		return "模型切换成功，当前模型为：" + u.Content
 	}
-	switch g.Content {
+	switch u.Content {
 	case "模型选择":
-		local_cache.SetChatStatus(g.GroupId, consts.ModelChoose)
+		local_cache.SetChatStatus(u.SenderId, consts.ModelChoose)
 		return consts.ModelIntroduce
 	case "帮助", "help", "Help", "HELP":
 		return consts.ModelHelpText
@@ -97,21 +94,20 @@ func (g *GroupChatService) CheckSpecialText() string {
 }
 
 // ChangeModel 模型选择
-func (g *GroupChatService) ChangeModel() error {
-	logs.Info("start GroupChatService ChangeModel,info:%v", utils.Encode(g))
+func (u *UserChatService) ChangeModel() error {
+	logs.Info("start GroupChatService ChangeModel,info:%v", utils.Encode(u))
 	status := consts.NormalChat
-	modelName := consts.ModelName(g.Content)
+	modelName := consts.ModelName(u.Content)
 	if _, ok := consts.ModelInfoMap[modelName]; !ok {
 		return errors.New("模型不存在，请重新输入")
 	}
 	if modelName == consts.ModelNameAdministrator {
-		if !utils.InStrArray(g.GroupId, config.GetAuthorityList()) {
+		if !utils.InStrArray(u.SenderId, config.GetAuthorityList()) {
 			return errors.New("模型不存在，请重新输入")
 		}
 		status = consts.Administrator
 	}
-
-	local_cache.SetCurrentModel(g.GroupId, modelName)
-	local_cache.SetChatStatus(g.GroupId, status)
+	local_cache.SetCurrentModel(u.SenderId, modelName)
+	local_cache.SetChatStatus(u.SenderId, status)
 	return nil
 }

@@ -24,7 +24,7 @@ func NewBotOperateService() *BotOperateService {
 
 // ShowFriends 展示全部好友
 func (b *BotOperateService) ShowFriends() string {
-	friends, err := b.getAllFriendDetail()
+	friends, err := b.GetAllFriendDetail()
 	if err != nil {
 		return fmt.Sprintf("加载全部好友失败，失败原因为:%v", err.Error())
 	}
@@ -40,7 +40,7 @@ func (b *BotOperateService) ShowFriends() string {
 func (b *BotOperateService) SendMsg2Friends(friendName string, content string) (string, error) {
 	var friendsDetail openwechat.Friends
 	var err error
-	friendsDetail, err = b.getAllFriendDetail()
+	friendsDetail, err = b.GetAllFriendDetail()
 	if err != nil {
 		return fmt.Sprintf("加载全部好友失败，失败原因为:%v", err.Error()), err
 	}
@@ -52,7 +52,7 @@ func (b *BotOperateService) SendMsg2Friends(friendName string, content string) (
 	return "消息发送成功", err
 }
 
-func (b *BotOperateService) getAllFriendDetail() ([]*openwechat.Friend, error) {
+func (b *BotOperateService) GetAllFriendDetail() ([]*openwechat.Friend, error) {
 	friends, err := botSelf.Friends()
 	if err != nil {
 		logs.Error("fail to botSelf.Friends(),err:%v", err)

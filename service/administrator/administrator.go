@@ -2,13 +2,16 @@ package administrator
 
 import (
 	"errors"
-	"strings"
+	"fmt"
+	"strconv"
+	"time"
 
 	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 	"wechatGpt/config"
 	"wechatGpt/dao/local_cache"
+	"wechatGpt/dao/sqlite"
 	"wechatGpt/service/self_bot"
 )
 
@@ -46,14 +49,18 @@ func (r *RootService) HandlerMsg() string {
 
 func (r *RootService) CheckSpecialText() string {
 	if aimStr, ok := utils.ContainStrArray(r.Command, []string{"模型选择", "模型切换"}); ok {
-		r.Command = strings.Replace(r.Command, aimStr, "", -1)
-		r.Command = strings.Replace(r.Command, "+", "", -1)
-		r.Command = strings.TrimSpace(r.Command)
+		// 清除符号
+		r.Command = utils.ClearContent(r.Command, aimStr)
 		err := r.ChangeModel()
 		if err != nil {
 			return ""
 		}
 		return "模型切换成功，当前模型为：" + r.Command
+	}
+	// 添加权限
+	if aimStr, ok := utils.ContainStrArray(r.Command, []string{"添加权限"}); ok {
+		r.Command = utils.ClearContent(r.Command, aimStr)
+		return r.AddAuthority(r.Command)
 	}
 	switch r.Command {
 	case "帮助", "help", "Help", "HELP":
@@ -80,4 +87,24 @@ func (r *RootService) ChangeModel() error {
 	local_cache.SetCurrentModel(r.Id, modelName)
 	local_cache.SetChatStatus(r.Id, status)
 	return nil
+}
+
+// AddAuthority 给用户加权限
+func (r *RootService) AddAuthority(userId string) string {
+	if _, err := strconv.ParseInt(userId, 10, 64); err != nil {
+		return fmt.Sprintf("传的用户ID有误，不为整数，ID:%v", userId)
+	}
+	friendsInfo, err := self_bot.NewBotOperateService().GetAllFriendDetail()
+	if err != nil {
+		return fmt.Sprintf("获取朋友信息出错，请重试，err:%v", err)
+	}
+	for _, friend := range friendsInfo {
+		if friend.AvatarID() == userId {
+			err = sqlite.NewDalUser().Register(friend.NickName, userId, 5*time.Hour)
+			if err == nil {
+				return "注册成功！"
+			}
+		}
+	}
+	return fmt.Sprintf("加权限失败，可能为ID上传有误,ID为：%v，错误信息为：%v", userId, err)
 }

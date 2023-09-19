@@ -1,15 +1,13 @@
 package handler
 
 import (
-	"fmt"
-
 	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service"
-	"wechatGpt/service/chat_manage"
-	"wechatGpt/service/image"
+	"wechatGpt/service/administrator"
+	"wechatGpt/service/authority"
 
 	"github.com/eatmoreapple/openwechat"
 )
@@ -35,37 +33,20 @@ func NewUserMsgHandler(ctx *openwechat.MessageContext) (*UserMsgService, error) 
 }
 
 func (u *UserMsgService) HandleMsg() {
-	logs.Info("ID：%v", u.sender.AvatarID())
-	// 选择模式（聊天？切换模式？）
-	chatStatus := local_cache.GetChatStatus(u.sender.AvatarID())
-	// 校验特定用语
-	reply := service.CheckSpecialText2(u.sender.AvatarID(), u.msg.Content, chatStatus)
-	if len(reply) > 0 {
+	// 前置校验权限
+	if reply, err := authority.NewManageAuthorityService(u.sender.AvatarID(), u.sender.NickName).CheckAuthority(); err != nil && len(reply) == 0 {
 		utils.Reply(u.msg, reply)
 		return
 	}
+
+	var reply string
+	chatStatus := local_cache.GetChatStatus(u.sender.AvatarID())
+
 	switch chatStatus {
-	case consts.NormalChat:
-		chatService := chat_manage.NewNormalChatService(u.sender.AvatarID(), u.msg.Content)
-		reply, err := chatService.Chat()
-		if err != nil {
-			utils.Reply(u.msg, "聊天模式出错，错误为："+err.Error())
-			return
-		}
-		utils.Reply(u.msg, reply)
-	case consts.ModelChoose:
-		err := chat_manage.NewModelChooseService(u.sender.AvatarID()).ChangeModel(u.msg.Content)
-		if err != nil {
-			utils.Reply(u.msg, "模式切换出错，错误为："+err.Error())
-			return
-		}
-		utils.Reply(u.msg, fmt.Sprintf("模型切换成功，当前模型为：%v", u.msg.Content))
-	case consts.CreateImage:
-		urlInfo, err := image.CreateImage(u.msg.Content)
-		if err != nil {
-			utils.Reply(u.msg, "模式切换出错，错误为："+err.Error())
-			return
-		}
-		utils.Reply(u.msg, "图片url为："+urlInfo)
+	case consts.Administrator:
+		reply = administrator.NewAdministratorService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content).HandlerMsg()
+	default:
+		reply = service.NewUserChatService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content, chatStatus).HandleMsg()
 	}
+	utils.Reply(u.msg, reply)
 }

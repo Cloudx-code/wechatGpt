@@ -146,7 +146,7 @@ func (w *WebTabService) parseResp(respContent string) (string, error) {
 	if len(errStruct.Message) > 0 {
 		// 重新获取Token
 		SetAuthorization2Nil()
-		return errStruct.Message, nil
+		return errStruct.Message + "，请重试", nil
 	}
 
 	var content string

@@ -10,6 +10,6 @@ func GetLLMConfig() *LLMConf {
 }
 
 func GetAuthorityList() []string {
-	return []string{"675102103", "675103903", "675108417"}
+	return []string{"675102103", "675103903", "675108480"}
 	//return DynamicConf.AuthorityList
 }
