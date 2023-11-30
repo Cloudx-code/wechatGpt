@@ -35,12 +35,12 @@ func GetCurrentModel(senderId string) consts.ModelName {
 	key := consts.RedisKeyCurrentModel + senderId
 	v, ok := cacheProxy.Get(key)
 	if !ok {
-		return consts.ModelNameWeTab
+		return consts.ModelNameWenXinYiYan
 	}
 	if currentModel, ok := v.(consts.ModelName); ok {
 		return currentModel
 	}
-	return consts.ModelNameWeTab
+	return consts.ModelNameWenXinYiYan
 }
 
 func SetCurrentModel(senderId string, currentModel consts.ModelName) {

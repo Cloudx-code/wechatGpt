@@ -45,7 +45,6 @@ func (g *GroupChatService) HandleMsg() string {
 	if len(reply) > 0 {
 		return reply
 	}
-	return "!!!"
 	switch g.ChatStatus {
 	case consts.NormalChat:
 		chatService := chat_manage.NewNormalChatService(g.GroupId, g.Content)

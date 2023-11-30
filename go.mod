@@ -6,17 +6,12 @@ require (
 	github.com/eatmoreapple/openwechat v1.4.4
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/spf13/viper v1.16.0
-	gorm.io/driver/sqlite v1.5.3
-	gorm.io/gorm v1.25.2-0.20230530020048-26663ab9bf55
 )
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/spf13/afero v1.9.5 // indirect

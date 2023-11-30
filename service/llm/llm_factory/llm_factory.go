@@ -15,13 +15,13 @@ func GetLLMService(sendId string) llm.LLM {
 
 	switch modelName {
 	case consts.ModelNameWenXinYiYan:
-		return wenxin.NewWenXinYiYanService()
+		return wenxin.NewWenXinYiYanService(sendId)
 	case consts.ModelNameWeTab:
 		return weTab.NewWeTabService(sendId)
-	case consts.ModelNameGPT:
-		return openai.NewGPTService()
+	case consts.ModelNameGPT4:
+		return openai.NewGPT4VService(sendId)
 	default:
 		// 默认文心一言
-		return wenxin.NewWenXinYiYanService()
+		return wenxin.NewWenXinYiYanService(sendId)
 	}
 }

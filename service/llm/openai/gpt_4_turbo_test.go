@@ -9,5 +9,5 @@ import (
 
 func TestGpt35(t *testing.T) {
 	logs.Init(false)
-	fmt.Println(Completions("你好"))
+	fmt.Println()
 }

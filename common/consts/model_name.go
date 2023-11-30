@@ -9,7 +9,7 @@ type ModelName string
 const (
 	ModelNameWenXinYiYan ModelName = "文心一言"
 	ModelNameWeTab       ModelName = "gpt3.5插件版"
-	ModelNameGPT         ModelName = "gpt3.5"
+	ModelNameGPT4        ModelName = "gpt4"
 	//ModelNameImageTest   ModelName = "gpt画图"
 	ModelNameAdministrator = "管理员模式"
 )
@@ -21,7 +21,7 @@ var ModelInfoMap = map[ModelName]*model.ModelDetail{
 	ModelNameWeTab: {
 		ModelIntroduce: "",
 	},
-	ModelNameGPT: {
+	ModelNameGPT4: {
 		ModelIntroduce: "",
 	},
 	ModelNameAdministrator: {

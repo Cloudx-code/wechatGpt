@@ -5,7 +5,6 @@ import (
 	"wechatGpt/common/logs"
 	"wechatGpt/config"
 	"wechatGpt/dao/local_cache"
-	"wechatGpt/dao/sqlite"
 )
 
 /*
@@ -17,7 +16,7 @@ import (
 func main() {
 	logs.Init(true)
 	local_cache.InitCache()
-	sqlite.Init("fish_moon.db")
+	//sqlite.Init("fish_moon.db")
 	config.InitStaticConfig("config/static_config.json")
 	//config.InitDynamicConfig("config.json")
 	//fmt.Println(utils.Encode(config.StaticConf))

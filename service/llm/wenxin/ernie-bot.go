@@ -10,19 +10,23 @@ import (
 	"net/url"
 	"time"
 
+	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 	"wechatGpt/config"
+	"wechatGpt/dao/local_cache"
 )
 
 type WenXinYiYanService struct {
 	accessToken string
 	apiKey      string
+	senderId    string
 	secretKey   string
+	cacheList   []message // 上下文缓存内容
 }
 
-func NewWenXinYiYanService() *WenXinYiYanService {
-	w := &WenXinYiYanService{}
+func NewWenXinYiYanService(sendId string) *WenXinYiYanService {
+	w := &WenXinYiYanService{senderId: sendId}
 	w.apiKey = config.GetLLMConfig().WenXinAk    // 请替换为您自己的API Key
 	w.secretKey = config.GetLLMConfig().WenXinSk // 请替换为您自己的Secret Key
 	if accessToken == "" {
@@ -69,28 +73,39 @@ func (w *WenXinYiYanService) getAccessToken() (string, error) {
 }
 
 func (w *WenXinYiYanService) PreQuery() {
-
+	key := consts.RedisKeyWenXinContext + w.senderId
+	v, ok := local_cache.Get(key)
+	if !ok {
+		return
+	}
+	if cachInfoStr, ok := v.(string); ok {
+		err := utils.Decode(cachInfoStr, &w.cacheList)
+		if err != nil {
+			logs.Error("fail to PreQuery,err:%v")
+		}
+		return
+	}
+	return
 }
 
 func (w *WenXinYiYanService) Query(content string) (string, error) {
 	if w.accessToken == "" {
 		return "", errors.New("accessToken is nil")
 	}
-	requestBody := &wenXinYiYanReqBody{
-		Messages: []message{
-			{
-				Role:    "user",
-				Content: content,
-			},
-		},
-	}
+	requestBody := &wenXinYiYanReqBody{}
+	w.cacheList = append(w.cacheList, message{
+		Role:    "user",
+		Content: content,
+	})
+	requestBody.Messages = w.cacheList
+
 	requestData, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", err
 	}
 	params := url.Values{}
 	params.Add("access_token", w.accessToken)
-	reqURL := fmt.Sprintf("%s?%s", wenxinBaseUrl, params.Encode())
+	reqURL := fmt.Sprintf("%s?%s", wenxin4BaseUrl, params.Encode())
 	logs.Info("test request:%v", string(requestData))
 	req, err := http.NewRequest("POST", reqURL, bytes.NewBuffer(requestData))
 	if err != nil {
@@ -121,10 +136,37 @@ func (w *WenXinYiYanService) Query(content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	// 字数超了则清空不存，并提示
+	ifSave := w.whetherNeedSave(wenXinResp.Result)
+	if !ifSave {
+		wenXinResp.Result += "\n上下文超出限制，已自动清空"
+	}
 	return wenXinResp.Result, nil
 }
 
-func (w *WenXinYiYanService) PostQuery() {
+// 是否需要缓存，是否超出字数
+func (w *WenXinYiYanService) whetherNeedSave(result string) bool {
+	// 多轮对话
+	w.cacheList = append(w.cacheList, message{
+		Role:    "assistant",
+		Content: result,
+	})
+	length := 0
+	for _, cache := range w.cacheList {
+		length += len(cache.Content)
+	}
+	if length > 1800 {
+		w.cacheList = make([]message, 0)
+		local_cache.Set(consts.RedisKeyWenXinContext+w.senderId, utils.Encode(w.cacheList))
+		return false
+	}
+	return true
+}
 
+func (w *WenXinYiYanService) PostQuery() {
+	if len(w.cacheList) == 0 {
+		return
+	}
+	key := consts.RedisKeyWenXinContext + w.senderId
+	local_cache.Set(key, utils.Encode(w.cacheList))
 }
