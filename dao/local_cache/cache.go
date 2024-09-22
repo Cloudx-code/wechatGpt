@@ -45,5 +45,5 @@ func GetCurrentModel(senderId string) consts.ModelName {
 
 func SetCurrentModel(senderId string, currentModel consts.ModelName) {
 	key := consts.RedisKeyCurrentModel + senderId
-	cacheProxy.Set(key, currentModel, 0)
+	cacheProxy.Set(key, currentModel, -1)
 }

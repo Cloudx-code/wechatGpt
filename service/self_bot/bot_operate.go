@@ -2,6 +2,7 @@ package self_bot
 
 import (
 	"fmt"
+	"os"
 
 	"wechatGpt/common/logs"
 
@@ -45,6 +46,27 @@ func (b *BotOperateService) SendMsg2Friends(friendName string, content string) (
 		return fmt.Sprintf("加载全部好友失败，失败原因为:%v", err.Error()), err
 	}
 	err = friendsDetail.SearchByNickName(1, friendName).SendText(content)
+	if err != nil {
+		logs.Error("fail to SendMsg2Friends，err：%v", err)
+		return fmt.Sprintf("给好友：%v发消息失败，失败原因为:%v", friendName, err.Error()), err
+	}
+	return "消息发送成功", err
+}
+
+// SendImage2Friends 给特定好友发消息
+func (b *BotOperateService) SendImage2Friends(friendName string, imagePath string) (string, error) {
+	var friendsDetail openwechat.Friends
+	var err error
+	friendsDetail, err = b.GetAllFriendDetail()
+	if err != nil {
+		return fmt.Sprintf("加载全部好友失败，失败原因为:%v", err.Error()), err
+	}
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return fmt.Sprintf("加载图片路径失败，路径为：%v,err:%v", imagePath, err), err
+	}
+
+	err = friendsDetail.SearchByNickName(1, friendName).SendImage(file)
 	if err != nil {
 		logs.Error("fail to SendMsg2Friends，err：%v", err)
 		return fmt.Sprintf("给好友：%v发消息失败，失败原因为:%v", friendName, err.Error()), err

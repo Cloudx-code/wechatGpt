@@ -6,5 +6,6 @@ const (
 	RedisKeyWebTabContext = "webTab_"
 	RedisKeyWenXinContext = "wenXin_"
 	RedisKeyGPT4VContext  = "gpt4v_"
+	RedisKeyGPT4OContext  = "gpt4o_"
 	RedisKeyAuthority     = "authority_"
 )

@@ -7,11 +7,12 @@ import (
 type ModelName string
 
 const (
-	ModelNameWenXinYiYan ModelName = "文心一言"
-	ModelNameWeTab       ModelName = "gpt3.5插件版"
-	ModelNameGPT4        ModelName = "gpt4"
-	//ModelNameImageTest   ModelName = "gpt画图"
-	ModelNameAdministrator = "管理员模式"
+	ModelNameWenXinYiYan   ModelName = "文心一言"
+	ModelNameWeTab         ModelName = "gpt3.5插件版"
+	ModelNameGPT4          ModelName = "gpt4"
+	ModelNameGPT4O         ModelName = "gpt4o"
+	ModelNameImgDallE3     ModelName = "画图"
+	ModelNameAdministrator ModelName = "管理员模式"
 )
 
 var ModelInfoMap = map[ModelName]*model.ModelDetail{
@@ -27,5 +28,10 @@ var ModelInfoMap = map[ModelName]*model.ModelDetail{
 	ModelNameAdministrator: {
 		ModelIntroduce: "",
 	},
-	//ModelNameImageTest:   nil,
+	ModelNameImgDallE3: {
+		ModelIntroduce: "",
+	},
+	ModelNameGPT4O: {
+		ModelIntroduce: "",
+	},
 }

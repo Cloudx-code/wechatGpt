@@ -14,14 +14,14 @@ import (
 	"wechatGpt/dao/local_cache"
 )
 
-type WebTabService struct {
+type WeTabService struct {
 	authorization  string // 用户验证信息
 	senderId       string // 发送者Id
 	conversationId string // 对话Id
 }
 
-func NewWeTabService(senderId string) *WebTabService {
-	w := &WebTabService{
+func NewWeTabService(senderId string) *WeTabService {
+	w := &WeTabService{
 		senderId: senderId,
 	}
 	if len(authorization) == 0 {
@@ -31,7 +31,11 @@ func NewWeTabService(senderId string) *WebTabService {
 	return w
 }
 
-func (w *WebTabService) getAuthorization() string {
+func (w *WeTabService) GetName() string {
+	return "GPT3.5插件版WeTab"
+}
+
+func (w *WeTabService) getAuthorization() string {
 
 	loginInfo := &LoginInfo{
 		Email:    config.GetLLMConfig().WeTabEmail,
@@ -81,11 +85,11 @@ func (w *WebTabService) getAuthorization() string {
 	return loginResp.Data.Token
 }
 
-func (w *WebTabService) PreQuery() {
+func (w *WeTabService) PreQuery() {
 	w.conversationId = w.getWebTabContext()
 }
 
-func (w *WebTabService) Query(text string) (string, error) {
+func (w *WeTabService) Query(text string) (string, error) {
 	reqBody := &WebTabReqBody{
 		Prompt:      text,
 		AssistantID: "",
@@ -126,7 +130,7 @@ func (w *WebTabService) Query(text string) (string, error) {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		logs.Error("fail to client.Do,[WebTabService],err:%v", err)
+		logs.Error("fail to client.Do,[WeTabService],err:%v", err)
 		return "", err
 	}
 
@@ -139,7 +143,7 @@ func (w *WebTabService) Query(text string) (string, error) {
 }
 
 // 获取gpt返回内容及conversationId
-func (w *WebTabService) parseResp(respContent string) (string, error) {
+func (w *WeTabService) parseResp(respContent string) (string, error) {
 	// 看看是否出错
 	errStruct := &ErrStruct{}
 	utils.Decode(respContent, &errStruct)
@@ -180,7 +184,7 @@ func (w *WebTabService) parseResp(respContent string) (string, error) {
 	return content, nil
 }
 
-func (w *WebTabService) splitString(s string, sep string) []string {
+func (w *WeTabService) splitString(s string, sep string) []string {
 	var result []string
 	length := len(s)
 	start := 0
@@ -199,14 +203,14 @@ func (w *WebTabService) splitString(s string, sep string) []string {
 	return result
 }
 
-func (w *WebTabService) PostQuery() {
+func (w *WeTabService) PostQuery() {
 	w.setWebTabContext()
 	// 如果继续聊天，继续weTab模式
 	local_cache.SetCurrentModel(w.senderId, consts.ModelNameWeTab)
 }
 
 // GetWebTabContext  获取WebTab上下文
-func (w *WebTabService) getWebTabContext() string {
+func (w *WeTabService) getWebTabContext() string {
 	key := consts.RedisKeyWebTabContext + w.senderId
 	v, ok := local_cache.Get(key)
 	if !ok {
@@ -218,7 +222,7 @@ func (w *WebTabService) getWebTabContext() string {
 	return ""
 }
 
-func (w *WebTabService) setWebTabContext() {
+func (w *WeTabService) setWebTabContext() {
 	key := consts.RedisKeyWebTabContext + w.senderId
 	local_cache.Set(key, w.conversationId)
 }

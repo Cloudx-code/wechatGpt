@@ -53,7 +53,7 @@ package openai
 //
 //	var reply string
 //	if len(gptResponseBody.Choices) > 0 {
-//		reply = gptResponseBody.Choices[0].Message.Content
+//		reply = gptResponseBody.Choices[0].GPT4VMessage.Content
 //	}
 //	logs.Info(fmt.Sprintf("gpt response text: %s ", reply))
 //	return reply, nil

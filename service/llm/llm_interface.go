@@ -7,4 +7,6 @@ type LLM interface {
 	Query(content string) (string, error)
 	// PostQuery 查询大语言模型后置操作
 	PostQuery()
+	// GetName 获取名称
+	GetName() string
 }

@@ -12,11 +12,13 @@ func Reply(msg *openwechat.Message, text string) {
 	msg.ReplyText(text)
 	fmt.Println("回复成功：")
 	fmt.Println(text)
-
 }
 
-func ReplyImage(msg *openwechat.Message) {
-	img, _ := os.Open("your file path")
+func ReplyImage(msg *openwechat.Message, path string) {
+	img, err := os.Open(path)
+	if err != nil {
+		Reply(msg, "图片路径有误")
+	}
 	defer img.Close()
 	msg.ReplyImage(img)
 }

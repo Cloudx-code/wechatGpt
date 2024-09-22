@@ -36,6 +36,10 @@ func NewWenXinYiYanService(sendId string) *WenXinYiYanService {
 	return w
 }
 
+func (w *WenXinYiYanService) GetName() string {
+	return "文心一言4.0"
+}
+
 // url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=%s&client_secret=%s`
 func (w *WenXinYiYanService) getAccessToken() (string, error) {
 	params := url.Values{}
@@ -81,7 +85,7 @@ func (w *WenXinYiYanService) PreQuery() {
 	if cachInfoStr, ok := v.(string); ok {
 		err := utils.Decode(cachInfoStr, &w.cacheList)
 		if err != nil {
-			logs.Error("fail to PreQuery,err:%v")
+			logs.Error("fail to PreQuery,err:%v", err)
 		}
 		return
 	}

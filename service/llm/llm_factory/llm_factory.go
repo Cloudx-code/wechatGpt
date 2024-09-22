@@ -20,6 +20,8 @@ func GetLLMService(sendId string) llm.LLM {
 		return weTab.NewWeTabService(sendId)
 	case consts.ModelNameGPT4:
 		return openai.NewGPT4VService(sendId)
+	case consts.ModelNameGPT4O:
+		return openai.NewGPT4OService(sendId)
 	default:
 		// 默认文心一言
 		return wenxin.NewWenXinYiYanService(sendId)

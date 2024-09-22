@@ -1,12 +1,23 @@
 package openai
 
-type RequestBody struct {
-	Model     string    `json:"model"`
-	Messages  []Message `json:"messages"`
-	MaxTokens int       `json:"max_tokens"`
+type GPT4VRequestBody struct {
+	Model     string         `json:"model"`
+	Messages  []GPT4VMessage `json:"messages"`
+	MaxTokens int            `json:"max_tokens"`
 }
 
-type Message struct {
+type GPT4ORequestBody struct {
+	Model     string         `json:"model"`
+	Messages  []GPT4OMessage `json:"messages"`
+	MaxTokens int            `json:"max_tokens"`
+}
+
+type GPT4OMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type GPT4VMessage struct {
 	Role    string    `json:"role"`
 	Content []Content `json:"content"`
 }

@@ -10,7 +10,6 @@ import (
 	"wechatGpt/config"
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service/chat_manage"
-	"wechatGpt/service/image"
 )
 
 /*
@@ -37,7 +36,7 @@ func NewGroupChatService(groupId, senderId, senderName, content string, chatStat
 	}
 }
 
-func (g *GroupChatService) HandleMsg() string {
+func (g *GroupChatService) HandleNormalChat() string {
 	// 选择模式（聊天？切换模式？）
 	logs.Info("用户文本：%v，status:%v", g.Content, g.ChatStatus)
 	// 校验特定用语
@@ -59,15 +58,27 @@ func (g *GroupChatService) HandleMsg() string {
 			return fmt.Sprintf("模式切换出错，错误为：%v", err.Error())
 		}
 		return fmt.Sprintf("模型切换成功，当前模型为：%v", g.Content)
-	case consts.CreateImage:
-		urlInfo, err := image.CreateImage(g.Content)
-		if err != nil {
-			return fmt.Sprintf("生成图片有误，错误为：%v", err.Error())
-		}
-		return fmt.Sprintf("图片url为：%v", urlInfo)
 	}
 
 	return ""
+}
+
+// HandleCreateImg 返回模型选择相关内容及url链接
+func (g *GroupChatService) HandleCreateImg() (string, string) {
+	// 选择模式（聊天？切换模式？）
+	logs.Info("用户文本：%v，status:%v", g.Content, g.ChatStatus)
+	// 校验特定用语,若满足，则返回模型切换
+	reply := g.CheckSpecialText()
+	if len(reply) > 0 {
+		return reply, ""
+	}
+	// 后续视为创建图片模式
+	msgInfo, urlPath, err := chat_manage.NewImgChatService(g.SenderId, g.Content).Chat()
+	if err != nil {
+		return fmt.Sprintf("生成图片有误，错误为：%v", err.Error()), ""
+	}
+	return msgInfo, urlPath
+
 }
 
 // CheckSpecialText 校验特定话术
@@ -98,7 +109,7 @@ func (g *GroupChatService) CheckSpecialText() string {
 // ChangeModel 模型选择
 func (g *GroupChatService) ChangeModel() error {
 	logs.Info("start GroupChatService ChangeModel,info:%v", utils.Encode(g))
-	status := consts.NormalChat
+	var status consts.ChatStatus
 	modelName := consts.ModelName(g.Content)
 	if _, ok := consts.ModelInfoMap[modelName]; !ok {
 		return errors.New("模型不存在，请重新输入")
@@ -108,6 +119,12 @@ func (g *GroupChatService) ChangeModel() error {
 			return errors.New("模型不存在，请重新输入")
 		}
 		status = consts.Administrator
+	}
+	switch modelName {
+	case consts.ModelNameImgDallE3:
+		status = consts.CreateImage
+	default:
+		status = consts.NormalChat
 	}
 
 	local_cache.SetCurrentModel(g.GroupId, modelName)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 	"wechatGpt/dao/local_cache"
@@ -36,14 +37,21 @@ func (u *UserMsgService) HandleMsg() {
 	//	return
 	//}
 
-	var reply string
+	var reply, urlPath string
 	chatStatus := local_cache.GetChatStatus(u.sender.AvatarID())
 
 	switch chatStatus {
 	//case consts.Administrator:
 	//	reply = administrator.NewAdministratorService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content).HandlerMsg()
+	case consts.CreateImage:
+		// 获取图片url链接
+		reply, urlPath = service.NewUserChatService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content, chatStatus).HandleCreateImg()
+		utils.Reply(u.msg, reply)
+		if urlPath != "" {
+			utils.ReplyImage(u.msg, urlPath)
+		}
 	default:
-		reply = service.NewUserChatService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content, chatStatus).HandleMsg()
+		reply = service.NewUserChatService(u.sender.AvatarID(), u.sender.NickName, u.msg.Content, chatStatus).HandleNormalChat()
+		utils.Reply(u.msg, reply)
 	}
-	utils.Reply(u.msg, reply)
 }

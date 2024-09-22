@@ -27,5 +27,6 @@ func (n *NormalChatService) Chat() (string, error) {
 		return "", err
 	}
 	llmModel.PostQuery()
+	llmReply += "\n本轮对话所有模型为：" + llmModel.GetName()
 	return llmReply, nil
 }

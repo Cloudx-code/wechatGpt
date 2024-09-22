@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
@@ -10,7 +11,6 @@ import (
 	"wechatGpt/config"
 	"wechatGpt/dao/local_cache"
 	"wechatGpt/service/chat_manage"
-	"wechatGpt/service/image"
 )
 
 /*
@@ -35,7 +35,7 @@ func NewUserChatService(senderId, senderName, content string, chatStatus consts.
 	}
 }
 
-func (u *UserChatService) HandleMsg() string {
+func (u *UserChatService) HandleNormalChat() string {
 	// 选择模式（聊天？切换模式？）
 	logs.Info("用户文本：%v，status:%v", u.Content, u.ChatStatus)
 	// 校验特定用语
@@ -57,15 +57,27 @@ func (u *UserChatService) HandleMsg() string {
 			return fmt.Sprintf("模式切换出错，错误为：%v", err.Error())
 		}
 		return fmt.Sprintf("模型切换成功，当前模型为：%v", u.Content)
-	case consts.CreateImage:
-		urlInfo, err := image.CreateImage(u.Content)
-		if err != nil {
-			return fmt.Sprintf("生成图片有误，错误为：%v", err.Error())
-		}
-		return fmt.Sprintf("图片url为：%v", urlInfo)
 	}
 
 	return ""
+}
+
+// HandleCreateImg 返回模型选择相关内容及url链接
+func (u *UserChatService) HandleCreateImg() (string, string) {
+	// 选择模式（聊天？切换模式？）
+	logs.Info("用户文本：%v，status:%v", u.Content, u.ChatStatus)
+	// 校验特定用语,若满足，则返回模型切换
+	reply := u.CheckSpecialText()
+	if len(reply) > 0 {
+		return reply, ""
+	}
+	// 后续视为创建图片模式
+	msgInfo, urlPath, err := chat_manage.NewImgChatService(u.SenderId, u.Content).Chat()
+	if err != nil {
+		return fmt.Sprintf("生成图片有误，错误为：%v", err.Error()), ""
+	}
+	return msgInfo, urlPath
+
 }
 
 // CheckSpecialText 校验特定话术
@@ -89,6 +101,12 @@ func (u *UserChatService) CheckSpecialText() string {
 		return consts.ModelHelpText
 	case "给俞越打招呼":
 		return "你好，鱼跃、happy、fish moon"
+	case "屏蔽喝水":
+		config.BanDrinkHours += 6
+		return fmt.Sprintf("已屏蔽喝水6小时,截止%d点为止都没法提醒宝宝喝水了呢", (6+time.Now().Hour())%24)
+	case "我要喝水":
+		config.BanDrinkHours = 0
+		return fmt.Sprintf("开始提醒喝水啦！")
 	}
 	return ""
 }
@@ -96,7 +114,7 @@ func (u *UserChatService) CheckSpecialText() string {
 // ChangeModel 模型选择
 func (u *UserChatService) ChangeModel() error {
 	logs.Info("start GroupChatService ChangeModel,info:%v", utils.Encode(u))
-	status := consts.NormalChat
+	var status consts.ChatStatus
 	modelName := consts.ModelName(u.Content)
 	if _, ok := consts.ModelInfoMap[modelName]; !ok {
 		return errors.New("模型不存在，请重新输入")
@@ -106,6 +124,12 @@ func (u *UserChatService) ChangeModel() error {
 			return errors.New("模型不存在，请重新输入")
 		}
 		status = consts.Administrator
+	}
+	switch modelName {
+	case consts.ModelNameImgDallE3:
+		status = consts.CreateImage
+	default:
+		status = consts.NormalChat
 	}
 	local_cache.SetCurrentModel(u.SenderId, modelName)
 	local_cache.SetChatStatus(u.SenderId, status)

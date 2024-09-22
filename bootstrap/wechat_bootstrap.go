@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"wechatGpt/common/logs"
+	"wechatGpt/config"
 	"wechatGpt/handler"
 	"wechatGpt/service/self_bot"
 
@@ -56,22 +57,40 @@ func sendMsg2Active() {
 	var reply string
 	var err error
 	botSelf := self_bot.NewBotOperateService()
-	msgList := []string{"我没有！！！", "我不齐！！！", "晓得哒！！！", "我睡滴！！！", "不管我！！！"}
-	ticker := time.NewTicker(30 * time.Minute)
+	msgList := []string{"心跳检测"}
+	ticker := time.NewTicker(1 * time.Hour)
+
 	for range ticker.C {
 		rand.Seed(time.Now().UnixNano())
-		reply, err = botSelf.SendMsg2Friends("指尖轻挑", msgList[rand.Intn(len(msgList))])
-		if err != nil {
-			logs.Error("fail to send friend old run,err:%v", err)
-			botSelf.SendMsg2Friends("sub(n,n,17)", reply)
-			continue
-		}
 		reply, err = botSelf.SendMsg2Friends("sub(n,n,17)", msgList[rand.Intn(len(msgList))])
 		if err != nil {
 			logs.Error("fail to send friend xy,err:%v", err)
 			botSelf.SendMsg2Friends("指尖轻挑)", reply)
 			continue
 		}
+		if config.BanDrinkHours > 0 {
+			config.BanDrinkHours--
+		} else {
+			if IsWorkingDay(time.Now()) && IsWorkingHours(time.Now()) {
+				botSelf.SendMsg2Friends("陈彦好", config.DrinkSentence[rand.Intn(len(config.DrinkSentence))]+"\n输入：屏蔽喝水可屏蔽6小时\n输入：我要喝水可接触屏蔽")
+			}
+		}
 		logs.Info("success to send friend")
 	}
+}
+
+func IsWorkingHours(currentTime time.Time) bool {
+	currentHour := currentTime.Hour()
+	// 检查当前小时数是否在早上9点到晚上6点之间（不包括6点）
+	return currentHour >= 9 && currentHour < 18
+}
+
+func IsWorkingDay(date time.Time) bool {
+	weekday := date.Weekday()
+	// 如果是周六或周日，则不是工作日
+	if weekday == time.Saturday || weekday == time.Sunday {
+		return false
+	}
+	// 其他情况，默认为工作日
+	return true
 }

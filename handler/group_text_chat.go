@@ -3,6 +3,7 @@ package handler
 import (
 	"strings"
 
+	"wechatGpt/common/consts"
 	"wechatGpt/common/logs"
 	"wechatGpt/common/utils"
 	"wechatGpt/dao/local_cache"
@@ -59,13 +60,25 @@ func (g *GroupMsgHandler) HandleMsg() {
 	//	utils.Reply(g.msg, reply)
 	//	return
 	//}
-	var reply string
+	var reply, urlPath string
 	chatStatus := local_cache.GetChatStatus(g.group.AvatarID())
 	//switch chatStatus {
 	//case consts.Administrator:
 	//	reply = administrator.NewAdministratorService(g.group.AvatarID(), g.sender.NickName, g.msg.Content).HandlerMsg()
 	//default:
 	//}
-	reply = service.NewGroupChatService(g.group.AvatarID(), g.sender.AvatarID(), g.sender.NickName, g.msg.Content, chatStatus).HandleMsg()
-	utils.Reply(g.msg, reply)
+	// 根据状态拆分
+	switch chatStatus {
+	case consts.CreateImage:
+		// 获取图片url链接
+		reply, urlPath = service.NewGroupChatService(g.group.AvatarID(), g.sender.AvatarID(), g.sender.NickName, g.msg.Content, chatStatus).HandleCreateImg()
+		utils.Reply(g.msg, reply)
+		if urlPath != "" {
+			utils.ReplyImage(g.msg, urlPath)
+		}
+	default:
+		reply = service.NewGroupChatService(g.group.AvatarID(), g.sender.AvatarID(), g.sender.NickName, g.msg.Content, chatStatus).HandleNormalChat()
+		utils.Reply(g.msg, reply)
+	}
+
 }
